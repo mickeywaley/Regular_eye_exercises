@@ -15,3 +15,9 @@
 - 下午: 15:00
 
 - 可以自定义添加定时
+
+-------------------
+
+眼保健操图文说明
+
+<img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/2.jpg" alt="Mobile wallpaper"   />
