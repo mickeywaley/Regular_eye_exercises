@@ -2,6 +2,12 @@
 
 眼保健操定时播放 Timed playback of eye health exercises
 
+-----------------------
+
+演示地址：https://dh.aq520.com/mp3/index.html 
+
+-----------------------
+
 <img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/1.png" alt="Mobile wallpaper" width="540" height="960" />
 
 
@@ -27,6 +33,8 @@ https://www.bilibili.com/video/BV14Y4y1N7PW/?spm_id_from=333.337.search-card.all
 眼保健操图文说明
 
 <img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/2.jpg" alt="Mobile wallpaper"   />
+
+------------------- 
 
 第一节：按揉攒竹穴
 
