@@ -18,6 +18,12 @@
 
 -------------------
 
+视频版本 ：第六套中小学眼保健操
+
+https://www.bilibili.com/video/BV14Y4y1N7PW/?spm_id_from=333.337.search-card.all.click&vd_source=3ded07ce758f6f78d572971140958304
+
+-------------------
+
 眼保健操图文说明
 
 <img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/2.jpg" alt="Mobile wallpaper"   />
@@ -47,3 +53,5 @@
 第六节：揉捏耳垂 脚趾抓地
 
 用双手大拇指和食指的螺纹面捏住耳垂正中的眼穴，其余三指自然并拢弯曲。伴随音乐口令，用大拇指和食指有节奏地揉捏穴位，同时用双脚全部脚趾做抓地运动，每拍一次，做四个八拍。　
+
+--------------------------------
