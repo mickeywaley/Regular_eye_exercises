@@ -12,6 +12,7 @@
             --neutral: #f8f9fa;
             --dark: #333333;
             --light: #f8f9fa;
+            --warning: #ff9800;
         }
         
         * {
@@ -77,6 +78,20 @@
             font-size: clamp(0.9rem, 2vw, 1.1rem);
             font-weight: bold;
             color: var(--primary);
+        }
+        
+        .volume-container {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .volume-warning {
+            color: var(--warning);
+            font-weight: bold;
         }
         
         .time-schedule {
@@ -249,6 +264,12 @@
                 width: auto;
                 min-width: 150px;
             }
+            
+            .volume-container {
+                flex-direction: row;
+                justify-content: center;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -275,6 +296,11 @@
             <div class="countdown">
                 <p id="nextPlayTime"></p>
                 <p id="countdownTimer"></p>
+            </div>
+            <div class="volume-container">
+                <span id="webVolumeDisplay">网页音量: 100%</span>
+                <span id="systemVolumeDisplay">系统音量: 检测中...</span>
+                <span id="volumeWarning" class="volume-warning"></span>
             </div>
         </div>
         
@@ -342,6 +368,9 @@
         const customTimesContainer = document.getElementById('customTimes');
         const noCustomTimes = document.getElementById('noCustomTimes');
         const currentTimeElement = document.getElementById('currentTime');
+        const webVolumeDisplay = document.getElementById('webVolumeDisplay');
+        const systemVolumeDisplay = document.getElementById('systemVolumeDisplay');
+        const volumeWarning = document.getElementById('volumeWarning');
         
         // 全局变量
         let defaultTimes = ['10:00', '15:00'];
@@ -350,6 +379,8 @@
         let isRunning = false;
         let nextPlayDate = null;
         let countdownInterval = null;
+        let volumeCheckInterval = null;
+        let systemVolumeSupported = false;
         
         // 更新当前时间显示
         function updateCurrentTime() {
@@ -555,6 +586,9 @@
                     updateNextPlayTime();
                 };
                 
+                // 开始音量检测
+                startVolumeCheck();
+                
                 return true;
             } catch (error) {
                 status.textContent = '自动启动失败，请手动启动';
@@ -576,6 +610,13 @@
                 clearInterval(countdownInterval);
                 countdownInterval = null;
             }
+            
+            // 停止音量检测
+            if (volumeCheckInterval) {
+                clearInterval(volumeCheckInterval);
+                volumeCheckInterval = null;
+            }
+            volumeWarning.textContent = '';
             
             // 更新UI状态
             isRunning = false;
@@ -623,6 +664,50 @@
             }
         }
         
+        // 检查音量并显示警告
+        function checkVolume() {
+            // 检查网页音量
+            const webVolume = Math.round(audio.volume * 100);
+            webVolumeDisplay.textContent = `网页音量: ${webVolume}%`;
+            
+            // 检查系统音量（如果支持）
+            if (systemVolumeSupported) {
+                navigator.mediaSession.setVolumeLevel(0); // 这不会实际改变音量，只是用于检查支持性
+                const systemVolume = Math.round(navigator.mediaSession.volumeLevel * 100);
+                systemVolumeDisplay.textContent = `系统音量: ${systemVolume}%`;
+            } else {
+                systemVolumeDisplay.textContent = '系统音量: 无法检测，请手动调整';
+            }
+            
+            // 显示音量警告
+            if (webVolume < 30 || (!systemVolumeSupported && webVolume < 30)) {
+                volumeWarning.textContent = '警告: 音量过低！建议调高音量';
+            } else if (webVolume < 50 || (!systemVolumeSupported && webVolume < 50)) {
+                volumeWarning.textContent = '提示: 音量偏低，可能需要调高';
+            } else {
+                volumeWarning.textContent = '';
+            }
+        }
+        
+        // 开始音量检测
+        function startVolumeCheck() {
+            // 检查系统音量支持
+            if ('mediaSession' in navigator && 'volumeLevel' in navigator.mediaSession) {
+                systemVolumeSupported = true;
+            } else {
+                systemVolumeSupported = false;
+            }
+            
+            // 先检查一次
+            checkVolume();
+            
+            // 然后每2秒检查一次
+            if (volumeCheckInterval) {
+                clearInterval(volumeCheckInterval);
+            }
+            volumeCheckInterval = setInterval(checkVolume, 2000);
+        }
+        
         // 按钮事件监听
         startButton.addEventListener('click', startTimers);
         stopButton.addEventListener('click', stopTimers);
@@ -634,6 +719,9 @@
                 addCustomTime();
             }
         });
+        
+        // 音频音量变化时更新显示
+        audio.addEventListener('volumechange', checkVolume);
         
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -651,6 +739,9 @@
             // 每秒更新当前时间
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
+            
+            // 初始化音量显示
+            checkVolume();
         });
     </script>
 </body>
