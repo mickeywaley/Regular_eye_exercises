@@ -8,7 +8,7 @@
 
 -----------------------
 
-<img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/1.png" alt="Mobile wallpaper" width="540" height="960" />
+<img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/1.png" alt="Mobile wallpaper"   />
 
 
 眼保健操定时播放-
