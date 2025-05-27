@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼保健操定时播放</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #f0f8ff;
+            --accent: #f44336;
+            --neutral: #f8f9fa;
+            --dark: #333333;
+            --light: #f8f9fa;
+            --warning: #ff9800;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to-br, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .timer-card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .title {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .current-time {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        
+        .status-container {
+            background-color: var(--secondary);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .status {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 0.3rem;
+        }
+        
+        .countdown {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .volume-container {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .volume-warning {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        
+        .time-schedule {
+            background-color: var(--neutral);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .time-list {
+            margin-bottom: 0.75rem;
+        }
+        
+        .time-item {
+            color: var(--dark);
+            margin-bottom: 0.3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .time-label {
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .time-value {
+            display: inline-block;
+        }
+        
+        .custom-time-input {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        
+        input[type="time"] {
+            padding: 0.6rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+            text-align: center;
+        }
+        
+        input[type="time"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        }
+        
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #45a049;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-delete {
+            background-color: var(--accent);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.8rem;
+            border-radius: 0.375rem;
+            margin-left: 0.5rem;
+        }
+        
+        .btn-delete:hover {
+            background-color: #d32f2f;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        
+        .controls button {
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        .audio-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        audio {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 1rem;
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .exercise-guide {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .guide-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .exercise-steps {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: var(--secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .step-number {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .step-image {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .step-description {
+            font-size: 0.9rem;
+            color: var(--dark);
+            line-height: 1.4;
+        }
+        
+        @media (min-width: 640px) {
+            .custom-time-input {
+                flex-direction: row;
+            }
+            
+            input[type="time"] {
+                flex: 1;
+            }
+            
+            .controls {
+                flex-direction: row;
+                justify-content: center;
+            }
+            
+            .controls button {
+                width: auto;
+                min-width: 150px;
+            }
+            
+            .volume-container {
+                flex-direction: row;
+                justify-content: center;
+                gap: 1rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .timer-card {
+                flex: 1;
+                min-width: 500px;
+            }
+            
+            .exercise-guide {
+                flex: 1;
+                min-width: 400px;
+            }
+            
+            .exercise-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer-card">
+            <div class="header">
+                <h1 class="title">
+                    <i class="fa fa-eye mr-2 text-primary"></i>眼保健操定时播放
+                </h1>
+                <div class="current-time">
+                    <i class="fa fa-clock-o mr-1 text-primary"></i>当前时间: <span id="currentTime" class="font-bold">--:--:--</span>
+                </div>
+            </div>
+            
+            <div class="audio-container">
+                <audio id="eyeExerciseAudio" controls>
+                    <source src="eye_exercise.mp3" type="audio/mpeg">
+                    您的浏览器不支持音频元素。
+                </audio>
+            </div>
+            
+            <div class="status-container">
+                <p id="status" class="status">正在初始化定时播放...</p>
+                <div class="countdown">
+                    <p id="nextPlayTime"></p>
+                    <p id="countdownTimer"></p>
+                </div>
+                <div class="volume-container">
+                    <span id="webVolumeDisplay">网页音量: 100%</span>
+                    <span id="systemVolumeDisplay">系统音量: 检测中...</span>
+                    <span id="volumeWarning" class="volume-warning"></span>
+                </div>
+            </div>
+            
+            <div class="time-schedule">
+                <h3 class="section-title">
+                    <i class="fa fa-calendar-check-o mr-2 text-primary"></i>播放时间表
+                </h3>
+                <div class="time-list">
+                    <div class="time-item">
+                        <span class="time-label">默认时间:</span>
+                    </div>
+                    <div class="time-item">
+                        <span class="time-value">- 上午: 10:00</span>
+                    </div>
+                    <div class="time-item">
+                        <span class="time-value">- 下午: 15:00</span>
+                    </div>
+                </div>
+                <div class="time-list">
+                    <div class="time-item">
+                        <span class="time-label">自定义时间:</span>
+                    </div>
+                    <div id="customTimes">
+                        <p id="noCustomTimes" class="time-item italic text-gray-500">暂无自定义时间</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="time-schedule bg-secondary">
+                <h3 class="section-title">
+                    <i class="fa fa-plus-circle mr-2 text-primary"></i>添加自定义时间
+                </h3>
+                <div class="custom-time-input">
+                    <input type="time" id="newCustomTime">
+                    <button id="addCustomTimeBtn" class="btn btn-primary">
+                        <i class="fa fa-plus mr-1"></i>添加时间
+                    </button>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startButton" class="btn btn-primary">
+                    <i class="fa fa-play mr-1"></i>启动定时播放
+                </button>
+                <button id="stopButton" class="btn btn-secondary" disabled>
+                    <i class="fa fa-stop mr-1"></i>停止定时播放
+                </button>
+            </div>
+            
+            <div class="footer">
+                <p>保护视力，预防近视 <i class="fa fa-heart text-accent"></i></p>
+            </div>
+        </div>
+        
+        <div class="exercise-guide">
+            <h2 class="guide-title">眼保健操图解</h2>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1. 揉天应穴</div>
+                    <div class="step-title">按揉眉头下方凹陷处</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/cfa00106fbc583e43d2b27c9199c9e92.gif" alt="揉天应穴" class="step-image">
+                    <p class="step-description">以左右大拇指罗纹面按揉眉头下方的凹陷处（攒竹穴下三分），其他四指自然弯曲，支撑在前额上。手指不要滑动，按揉力度适中，以穴位产生轻微酸胀感为宜。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2. 挤按睛明穴</div>
+                    <div class="step-title">按揉鼻根部与内眼角之间</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/c3d4b7735b31f3c350fbcb632386bbf5.gif" alt="挤按睛明穴" class="step-image">
+                    <p class="step-description">用双手食指轻轻按压鼻根部，靠近内眼角的凹陷处（睛明穴）。先向下按，再向上挤，一按一挤为一次，动作要轻柔缓慢，避免压迫眼球。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3. 按揉四白穴</div>
+                    <div class="step-title">按揉眼眶下缘正中直下一横指处</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/a9c2676fe0a98f05bd044e0d20361db3.gif" alt="按揉四白穴" class="step-image">
+                    <p class="step-description">先以双手食指与中指并拢，放在鼻翼两侧，大拇指支撑在下腭骨凹陷处，然后放下中指，用食指指腹按揉面颊中央的四白穴。注意穴位不要移动，按揉时以局部有酸胀感为佳。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4. 按太阳穴轮刮眼眶</div>
+                    <div class="step-title">按揉太阳穴，轮刮眼眶</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/1e5ab82c1983036f2460281ef2af0d74.gif" alt="按太阳穴轮刮眼眶" class="step-image">
+                    <p class="step-description">双手握拳，以大拇指罗纹面按住太阳穴，用弯曲的食指第二节内侧面，从眉头开始沿眼眶上缘向外刮至眉梢，然后再从内眼角沿眼眶下缘向外刮至外眼角。先上后下，轮刮一圈为一次，注意力度适中，不要刮伤皮肤。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5. 按揉风池穴</div>
+                    <div class="step-title">按揉后颈部肌肉</div>
+                    <img src="https://file.youlai.cn/cnkfile1/M02/E6/A2/CAA748D52245CACADD44BD7E0A86E6A2.jpg" alt="按揉风池穴" class="step-image">
+                    <p class="step-description">用双手食指和中指并拢，按揉后颈部两侧凹陷处的风池穴（位于枕骨下方，胸锁乳突肌与斜方肌上端之间的凹陷处）。同时头部微微后仰，保持肌肉放松，按揉时以局部有酸胀感为宜。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">6. 揉捏耳垂，脚趾抓地</div>
+                    <div class="step-title">放松全身肌肉</div>
+                    <img src="https://p3.itc.cn/images01/20230111/d3b781d35aa54925b9bc68b13ac7a5ad.png" alt="揉捏耳垂，脚趾抓地" class="step-image">
+                    <p class="step-description">双手拇指和食指捏住耳垂，轻轻揉捏，同时双脚脚趾抓地，全身肌肉微微收缩后放松。重复此动作，可促进耳部血液循环，缓解眼疲劳，同时放松全身肌肉。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const audio = document.getElementById('eyeExerciseAudio');
+        const status = document.getElementById('status');
+        const nextPlayTime = document.getElementById('nextPlayTime');
+        const countdownTimer = document.getElementById('countdownTimer');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const newCustomTime = document.getElementById('newCustomTime');
+        const addCustomTimeBtn = document.getElementById('addCustomTimeBtn');
+        const customTimesContainer = document.getElementById('customTimes');
+        const noCustomTimes = document.getElementById('noCustomTimes');
+        const currentTimeElement = document.getElementById('currentTime');
+        const webVolumeDisplay = document.getElementById('webVolumeDisplay');
+        const systemVolumeDisplay = document.getElementById('systemVolumeDisplay');
+        const volumeWarning = document.getElementById('volumeWarning');
+        
+        // 全局变量
+        let defaultTimes = ['10:00', '15:00'];
+        let customTimes = JSON.parse(localStorage.getItem('customTimes')) || [];
+        let allTimers = [];
+        let isRunning = false;
+        let nextPlayDate = null;
+        let countdownInterval = null;
+        let volumeCheckInterval = null;
+        let systemVolumeSupported = false;
+        
+        // 更新当前时间显示
+        function updateCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        // 初始化自定义时间显示
+        function initCustomTimesDisplay() {
+            if (customTimes.length > 0) {
+                noCustomTimes.style.display = 'none';
+            } else {
+                noCustomTimes.style.display = 'block';
+            }
+            
+            // 清空现有自定义时间显示
+            const customTimeElements = document.querySelectorAll('.custom-time-item');
+            customTimeElements.forEach(el => el.remove());
+            
+            // 添加自定义时间显示
+            customTimes.forEach((time, index) => {
+                const timeItem = document.createElement('div');
+                timeItem.className = 'time-item custom-time-item';
+                timeItem.innerHTML = `
+                    <span class="time-value">- ${time}</span>
+                    <button class="btn-delete" data-index="${index}">
+                        <i class="fa fa-trash-o mr-1"></i>删除
+                    </button>
+                `;
+                customTimesContainer.appendChild(timeItem);
+                
+                // 添加删除事件
+                timeItem.querySelector('.btn-delete').addEventListener('click', function() {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    customTimes.splice(idx, 1);
+                    localStorage.setItem('customTimes', JSON.stringify(customTimes));
+                    initCustomTimesDisplay();
+                    
+                    // 如果定时器已启动，重新设置
+                    if (isRunning) {
+                        setupAllTimers();
+                        updateNextPlayTime();
+                    }
+                });
+            });
+        }
+        
+        // 更新下一次播放时间的显示
+        function updateNextPlayTime() {
+            const now = new Date();
+            const allScheduledTimes = [...defaultTimes, ...customTimes];
+            
+            // 找到最近的下一次播放时间
+            nextPlayDate = null;
+            let nextTimeStr = '';
+            
+            allScheduledTimes.forEach(time => {
+                const [hours, minutes] = time.split(':').map(Number);
+                const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+                
+                // 如果这个时间点已经过了，检查明天的相同时间
+                if (scheduledTime <= now) {
+                    scheduledTime.setDate(scheduledTime.getDate() + 1);
+                }
+                
+                // 如果找到更早的下一次播放时间
+                if (!nextPlayDate || scheduledTime < nextPlayDate) {
+                    nextPlayDate = scheduledTime;
+                    nextTimeStr = time;
+                }
+            });
+            
+            if (nextPlayDate) {
+                const isToday = nextPlayDate.getDate() === now.getDate();
+                nextPlayTime.textContent = `下一次播放: ${isToday ? '今天' : '明天'} ${nextTimeStr}`;
+                
+                // 开始倒计时
+                startCountdown();
+            }
+            
+            return nextPlayDate;
+        }
+        
+        // 开始倒计时
+        function startCountdown() {
+            // 清除现有倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 如果没有下一次播放时间，不启动倒计时
+            if (!nextPlayDate) {
+                countdownTimer.textContent = '';
+                return;
+            }
+            
+            // 每秒更新倒计时
+            updateCountdownDisplay();
+            countdownInterval = setInterval(updateCountdownDisplay, 1000);
+        }
+        
+        // 更新倒计时显示
+        function updateCountdownDisplay() {
+            if (!nextPlayDate) return;
+            
+            const now = new Date();
+            const diff = nextPlayDate - now;
+            
+            // 如果时间已过，停止倒计时
+            if (diff <= 0) {
+                clearInterval(countdownInterval);
+                countdownTimer.textContent = '即将播放...';
+                return;
+            }
+            
+            // 计算剩余时间
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            // 格式化显示
+            let display = '';
+            if (hours > 0) {
+                display += `${hours}时`;
+            }
+            if (minutes > 0 || hours > 0) {
+                display += `${minutes}分`;
+            }
+            display += `${seconds}秒`;
+            
+            countdownTimer.textContent = `倒计时: ${display}`;
+        }
+        
+        // 播放音频
+        function playAudio() {
+            status.textContent = '正在播放眼保健操音乐...';
+            audio.currentTime = 0;
+            audio.play().catch(error => {
+                status.textContent = '播放失败: ' + error.message;
+                console.error('播放失败:', error);
+            });
+        }
+        
+        // 设置所有定时器
+        function setupAllTimers() {
+            // 清除现有定时器
+            allTimers.forEach(timer => clearTimeout(timer));
+            allTimers = [];
+            
+            const now = new Date();
+            const allScheduledTimes = [...defaultTimes, ...customTimes];
+            
+            allScheduledTimes.forEach(time => {
+                const [hours, minutes] = time.split(':').map(Number);
+                const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+                
+                // 如果这个时间点已经过了，设置为明天
+                if (scheduledTime <= now) {
+                    scheduledTime.setDate(scheduledTime.getDate() + 1);
+                }
+                
+                // 计算延迟时间（毫秒）
+                const delay = scheduledTime - now;
+                
+                // 设置定时器
+                const timer = setTimeout(() => {
+                    playAudio();
+                    // 设置明天同一时间的定时器
+                    setupAllTimers();
+                    // 更新下一次播放时间
+                    updateNextPlayTime();
+                }, delay);
+                
+                allTimers.push(timer);
+                
+                console.log(`已设置定时器: ${time} 将在 ${Math.floor(delay / 3600000)} 小时 ${Math.floor((delay % 3600000) / 60000)} 分钟后触发`);
+            });
+        }
+        
+        // 启动定时播放
+        function startTimers() {
+            if (isRunning) return;
+            
+            try {
+                // 设置定时器
+                setupAllTimers();
+                
+                // 更新UI状态
+                isRunning = true;
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                status.textContent = '定时播放已启动';
+                
+                // 更新下一次播放时间显示
+                updateNextPlayTime();
+                
+                // 音频播放结束时更新状态
+                audio.onended = function() {
+                    status.textContent = '播放结束，等待下次播放...';
+                    updateNextPlayTime();
+                };
+                
+                // 开始音量检测
+                startVolumeCheck();
+                
+                return true;
+            } catch (error) {
+                status.textContent = '自动启动失败，请手动启动';
+                console.error('启动失败:', error);
+                return false;
+            }
+        }
+        
+        // 停止定时播放
+        function stopTimers() {
+            if (!isRunning) return;
+            
+            // 清除定时器
+            allTimers.forEach(timer => clearTimeout(timer));
+            allTimers = [];
+            
+            // 清除倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            // 停止音量检测
+            if (volumeCheckInterval) {
+                clearInterval(volumeCheckInterval);
+                volumeCheckInterval = null;
+            }
+            volumeWarning.textContent = '';
+            
+            // 更新UI状态
+            isRunning = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            status.textContent = '定时播放已停止';
+            nextPlayTime.textContent = '';
+            countdownTimer.textContent = '';
+        }
+        
+        // 添加自定义时间
+        function addCustomTime() {
+            const time = newCustomTime.value.trim();
+            if (!time) {
+                alert('请选择一个时间');
+                return;
+            }
+            
+            // 检查时间格式是否正确 (HH:MM)
+            if (!/^\d{2}:\d{2}$/.test(time)) {
+                alert('请使用正确的时间格式 (HH:MM)');
+                return;
+            }
+            
+            // 检查是否已存在
+            if ([...defaultTimes, ...customTimes].includes(time)) {
+                alert('这个时间已经存在');
+                return;
+            }
+            
+            // 添加到自定义时间列表
+            customTimes.push(time);
+            
+            // 保存到本地存储
+            localStorage.setItem('customTimes', JSON.stringify(customTimes));
+            
+            // 更新显示
+            initCustomTimesDisplay();
+            newCustomTime.value = '';
+            
+            // 如果定时器已启动，重新设置
+            if (isRunning) {
+                setupAllTimers();
+                updateNextPlayTime();
+            }
+        }
+        
+        // 检查音量并显示警告
+        function checkVolume() {
+            // 检查网页音量
+            const webVolume = Math.round(audio.volume * 100);
+            webVolumeDisplay.textContent = `网页音量: ${webVolume}%`;
+            
+            // 检查系统音量（如果支持）
+            if (systemVolumeSupported) {
+                navigator.mediaSession.setVolumeLevel(0); // 这不会实际改变音量，只是用于检查支持性
+                const systemVolume = Math.round(navigator.mediaSession.volumeLevel * 100);
+                systemVolumeDisplay.textContent = `系统音量: ${systemVolume}%`;
+            } else {
+                systemVolumeDisplay.textContent = '系统音量: 无法检测，请手动调整';
+            }
+            
+            // 显示音量警告
+            if (webVolume < 30 || (!systemVolumeSupported && webVolume < 30)) {
+                volumeWarning.textContent = '警告: 音量过低！建议调高音量';
+            } else if (webVolume < 50 || (!systemVolumeSupported && webVolume < 50)) {
+                volumeWarning.textContent = '提示: 音量偏低，可能需要调高';
+            } else {
+                volumeWarning.textContent = '';
+            }
+        }
+        
+        // 开始音量检测
+        function startVolumeCheck() {
+            // 检查系统音量支持
+            if ('mediaSession' in navigator && 'volumeLevel' in navigator.mediaSession) {
+                systemVolumeSupported = true;
+            } else {
+                systemVolumeSupported = false;
+            }
+            
+            // 先检查一次
+            checkVolume();
+            
+            // 然后每2秒检查一次
+            if (volumeCheckInterval) {
+                clearInterval(volumeCheckInterval);
+            }
+            volumeCheckInterval = setInterval(checkVolume, 2000);
+        }
+        
+        // 按钮事件监听
+        startButton.addEventListener('click', startTimers);
+        stopButton.addEventListener('click', stopTimers);
+        addCustomTimeBtn.addEventListener('click', addCustomTime);
+        
+        // 按Enter键添加自定义时间
+        newCustomTime.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCustomTime();
+            }
+        });
+        
+        // 音频音量变化时更新显示
+        audio.addEventListener('volumechange', checkVolume);
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initCustomTimesDisplay();
+            
+            // 尝试自动启动
+            const started = startTimers();
+            if (!started) {
+                startButton.disabled = false;
+            }
+            
+            // 更新下一次播放时间
+            updateNextPlayTime();
+            
+            // 每秒更新当前时间
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // 初始化音量显示
+            checkVolume();
+        });
+    </script>
+</body>
+</html>
+    
