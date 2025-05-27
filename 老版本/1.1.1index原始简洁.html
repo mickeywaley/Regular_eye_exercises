@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每天上午10点，下午3点自动 定时播放眼保健操音乐（测试EDGE支持）</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        audio {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>每天上午10点，下午3点自动 定时播放眼保健操音乐（测试EDGE支持）</h1>
+        <audio id="eyeExerciseAudio" controls>
+            <source src="eye_exercise.mp3" type="audio/mpeg">
+//代码中的 <source src="eye_exercise.mp3" type="audio/mpeg"> 需要你将 eye_exercise.mp3 替换为实际的眼保健操音乐文件路径。
+//请确保音频文件与HTML文件在同一目录下，或者提供正确的文件路径（可以是本地路径或在线URL）。
+//支持的音频格式包括 MP3、WAV 等，建议使用 MP3 格式以确保兼容性。
+
+
+            您的浏览器不支持音频元素。
+        </audio>
+        <p id="status">等待播放...</p>
+    </div>
+
+    <script>
+        // 获取音频元素
+        const audio = document.getElementById('eyeExerciseAudio');
+        const status = document.getElementById('status');
+
+        // 检查当前时间并播放音乐的函数
+        function checkTimeAndPlay() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // 每天上午10:00:00 和 下午15:00:00 播放
+            if ((hours === 10 && minutes === 0 && seconds === 0) || 
+                (hours === 15 && minutes === 0 && seconds === 0)) {
+                audio.play().then(() => {
+                    status.textContent = '正在播放眼保健操音乐...';
+                }).catch(error => {
+                    status.textContent = '播放失败: ' + error.message;
+                });
+            }
+        }
+
+        // 每秒检查一次时间
+        setInterval(checkTimeAndPlay, 1000);
+
+        // 音频播放结束时更新状态
+        audio.onended = function() {
+            status.textContent = '播放结束，等待下次播放...';
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼保健操定时播放</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+        }
+        audio {
+            margin: 20px 0;
+            width: 100%;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .schedule {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: left;
+        }
+        .schedule p {
+            margin: 8px 0;
+        }
+        .custom-time {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+        }
+        .custom-time input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>眼保健操定时播放</h1>
+        <audio id="eyeExerciseAudio" controls>
+            <source src="eye_exercise.mp3" type="audio/mpeg">
+            您的浏览器不支持音频元素。
+        </audio>
+        
+        <div class="schedule">
+            <h3>播放时间表</h3>
+            <div id="defaultTimes">
+                <p><strong>默认时间:</strong></p>
+                <p id="morningTime">- 上午: 10:00</p>
+                <p id="afternoonTime">- 下午: 15:00</p>
+            </div>
+            <div id="customTimes">
+                <p><strong>自定义时间:</strong></p>
+                <p id="noCustomTimes" class="empty-state">暂无自定义时间</p>
+            </div>
+        </div>
+        
+        <div class="custom-time">
+            <h3>添加自定义时间</h3>
+            <input type="time" id="newCustomTime" placeholder="选择时间">
+            <button id="addCustomTimeBtn">添加时间</button>
+        </div>
+        
+        <div>
+            <button id="startButton">启动定时播放</button>
+            <button id="stopButton" disabled>停止定时播放</button>
+        </div>
+        
+        <p id="status">请点击"启动定时播放"按钮开始</p>
+        <p id="nextPlayTime"></p>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const audio = document.getElementById('eyeExerciseAudio');
+        const status = document.getElementById('status');
+        const nextPlayTime = document.getElementById('nextPlayTime');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const newCustomTime = document.getElementById('newCustomTime');
+        const addCustomTimeBtn = document.getElementById('addCustomTimeBtn');
+        const customTimesContainer = document.getElementById('customTimes');
+        const noCustomTimes = document.getElementById('noCustomTimes');
+        
+        // 全局变量
+        let defaultTimes = ['10:00', '15:00'];
+        let customTimes = JSON.parse(localStorage.getItem('customTimes')) || [];
+        let allTimers = [];
+        let isRunning = false;
+        
+        // 初始化自定义时间显示
+        function initCustomTimesDisplay() {
+            if (customTimes.length > 0) {
+                noCustomTimes.style.display = 'none';
+            } else {
+                noCustomTimes.style.display = 'block';
+            }
+            
+            // 清空现有自定义时间显示
+            const customTimeElements = document.querySelectorAll('.custom-time-item');
+            customTimeElements.forEach(el => el.remove());
+            
+            // 添加自定义时间显示
+            customTimes.forEach((time, index) => {
+                const timeItem = document.createElement('p');
+                timeItem.className = 'custom-time-item';
+                timeItem.innerHTML = `- ${time} <button class="delete-btn" data-index="${index}">删除</button>`;
+                customTimesContainer.appendChild(timeItem);
+                
+                // 添加删除事件
+                timeItem.querySelector('.delete-btn').addEventListener('click', function() {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    customTimes.splice(idx, 1);
+                    localStorage.setItem('customTimes', JSON.stringify(customTimes));
+                    initCustomTimesDisplay();
+                });
+            });
+        }
+        
+        // 更新下一次播放时间的显示
+        function updateNextPlayTime() {
+            const now = new Date();
+            const allScheduledTimes = [...defaultTimes, ...customTimes];
+            
+            // 找到最近的下一次播放时间
+            let nextTime = null;
+            let nextTimeStr = '';
+            
+            allScheduledTimes.forEach(time => {
+                const [hours, minutes] = time.split(':').map(Number);
+                const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+                
+                // 如果这个时间点已经过了，检查明天的相同时间
+                if (scheduledTime <= now) {
+                    scheduledTime.setDate(scheduledTime.getDate() + 1);
+                }
+                
+                // 如果找到更早的下一次播放时间
+                if (!nextTime || scheduledTime < nextTime) {
+                    nextTime = scheduledTime;
+                    nextTimeStr = time;
+                }
+            });
+            
+            if (nextTime) {
+                const isToday = nextTime.getDate() === now.getDate();
+                nextPlayTime.textContent = `下一次播放时间: ${isToday ? '今天' : '明天'} ${nextTimeStr}`;
+            }
+            
+            return nextTime;
+        }
+        
+        // 播放音频
+        function playAudio() {
+            status.textContent = '正在播放眼保健操音乐...';
+            audio.currentTime = 0;
+            audio.play().catch(error => {
+                status.textContent = '播放失败: ' + error.message;
+                console.error('播放失败:', error);
+            });
+        }
+        
+        // 设置所有定时器
+        function setupAllTimers() {
+            // 清除现有定时器
+            allTimers.forEach(timer => clearTimeout(timer));
+            allTimers = [];
+            
+            const now = new Date();
+            const allScheduledTimes = [...defaultTimes, ...customTimes];
+            
+            allScheduledTimes.forEach(time => {
+                const [hours, minutes] = time.split(':').map(Number);
+                const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+                
+                // 如果这个时间点已经过了，设置为明天
+                if (scheduledTime <= now) {
+                    scheduledTime.setDate(scheduledTime.getDate() + 1);
+                }
+                
+                // 计算延迟时间（毫秒）
+                const delay = scheduledTime - now;
+                
+                // 设置定时器
+                const timer = setTimeout(() => {
+                    playAudio();
+                    // 设置明天同一时间的定时器
+                    setupAllTimers();
+                }, delay);
+                
+                allTimers.push(timer);
+                
+                console.log(`已设置定时器: ${time} 将在 ${Math.floor(delay / 3600000)} 小时 ${Math.floor((delay % 3600000) / 60000)} 分钟后触发`);
+            });
+        }
+        
+        // 启动定时播放
+        function startTimers() {
+            if (isRunning) return;
+            
+            // 设置定时器
+            setupAllTimers();
+            
+            // 更新UI状态
+            isRunning = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            status.textContent = '定时播放已启动';
+            
+            // 更新下一次播放时间显示
+            updateNextPlayTime();
+            
+            // 音频播放结束时更新状态
+            audio.onended = function() {
+                status.textContent = '播放结束，等待下次播放...';
+                updateNextPlayTime();
+            };
+        }
+        
+        // 停止定时播放
+        function stopTimers() {
+            if (!isRunning) return;
+            
+            // 清除定时器
+            allTimers.forEach(timer => clearTimeout(timer));
+            allTimers = [];
+            
+            // 更新UI状态
+            isRunning = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            status.textContent = '定时播放已停止';
+            nextPlayTime.textContent = '';
+        }
+        
+        // 添加自定义时间
+        function addCustomTime() {
+            const time = newCustomTime.value.trim();
+            if (!time) {
+                alert('请选择一个时间');
+                return;
+            }
+            
+            // 检查时间格式是否正确 (HH:MM)
+            if (!/^\d{2}:\d{2}$/.test(time)) {
+                alert('请使用正确的时间格式 (HH:MM)');
+                return;
+            }
+            
+            // 检查是否已存在
+            if ([...defaultTimes, ...customTimes].includes(time)) {
+                alert('这个时间已经存在');
+                return;
+            }
+            
+            // 添加到自定义时间列表
+            customTimes.push(time);
+            
+            // 保存到本地存储
+            localStorage.setItem('customTimes', JSON.stringify(customTimes));
+            
+            // 更新显示
+            initCustomTimesDisplay();
+            newCustomTime.value = '';
+            
+            // 如果定时器已启动，重新设置
+            if (isRunning) {
+                setupAllTimers();
+                updateNextPlayTime();
+            }
+        }
+        
+        // 按钮事件监听
+        startButton.addEventListener('click', startTimers);
+        stopButton.addEventListener('click', stopTimers);
+        addCustomTimeBtn.addEventListener('click', addCustomTime);
+        
+        // 按Enter键添加自定义时间
+        newCustomTime.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCustomTime();
+            }
+        });
+        
+        // 页面加载时初始化
+        initCustomTimesDisplay();
+        updateNextPlayTime();
+    </script>
+</body>
+</html>

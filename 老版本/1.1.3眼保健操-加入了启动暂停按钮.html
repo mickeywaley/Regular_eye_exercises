@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼保健操定时播放</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+        }
+        audio {
+            margin: 20px 0;
+            width: 100%;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .schedule {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .schedule p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>眼保健操定时播放</h1>
+        <audio id="eyeExerciseAudio" controls>
+            <source src="eye_exercise.mp3" type="audio/mpeg">
+            您的浏览器不支持音频元素。
+        </audio>
+        
+        <div class="schedule">
+            <p>今日眼保健操时间:</p>
+            <p id="morningTime">- 上午: 10:00</p>
+            <p id="afternoonTime">- 下午: 15:00</p>
+        </div>
+        
+        <div>
+            <button id="startButton">启动定时播放</button>
+            <button id="stopButton" disabled>停止定时播放</button>
+        </div>
+        
+        <p id="status">请点击"启动定时播放"按钮开始</p>
+        <p id="nextPlayTime"></p>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const audio = document.getElementById('eyeExerciseAudio');
+        const status = document.getElementById('status');
+        const nextPlayTime = document.getElementById('nextPlayTime');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        
+        // 全局变量
+        let morningTimer = null;
+        let afternoonTimer = null;
+        let isRunning = false;
+        
+        // 更新下一次播放时间的显示
+        function updateNextPlayTime() {
+            const now = new Date();
+            const todayMorning = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
+            const todayAfternoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
+            
+            let nextTime = null;
+            
+            if (now < todayMorning) {
+                nextTime = todayMorning;
+                nextPlayTime.textContent = `下一次播放时间: 今天 10:00`;
+            } else if (now < todayAfternoon) {
+                nextTime = todayAfternoon;
+                nextPlayTime.textContent = `下一次播放时间: 今天 15:00`;
+            } else {
+                // 如果今天的两个时间点都过了，计算明天的时间
+                const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+                const tomorrowMorning = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 10, 0, 0);
+                nextTime = tomorrowMorning;
+                nextPlayTime.textContent = `下一次播放时间: 明天 10:00`;
+            }
+            
+            return nextTime;
+        }
+        
+        // 播放音频
+        function playAudio() {
+            status.textContent = '正在播放眼保健操音乐...';
+            audio.currentTime = 0;
+            audio.play().catch(error => {
+                status.textContent = '播放失败: ' + error.message;
+                console.error('播放失败:', error);
+            });
+        }
+        
+        // 设置定时器
+        function setupTimers() {
+            const now = new Date();
+            const todayMorning = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
+            const todayAfternoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
+            
+            // 计算距离今天10:00和15:00的毫秒数
+            let morningDelay = todayMorning - now;
+            let afternoonDelay = todayAfternoon - now;
+            
+            // 如果10:00已经过了，设置为明天的10:00
+            if (morningDelay <= 0) {
+                morningDelay += 24 * 60 * 60 * 1000;
+            }
+            
+            // 如果15:00已经过了，设置为明天的15:00
+            if (afternoonDelay <= 0) {
+                afternoonDelay += 24 * 60 * 60 * 1000;
+            }
+            
+            // 设置定时器
+            morningTimer = setTimeout(() => {
+                playAudio();
+                // 播放完后重新设置明天的定时器
+                morningTimer = setTimeout(playAudio, 24 * 60 * 60 * 1000);
+            }, morningDelay);
+            
+            afternoonTimer = setTimeout(() => {
+                playAudio();
+                // 播放完后重新设置明天的定时器
+                afternoonTimer = setTimeout(playAudio, 24 * 60 * 60 * 1000);
+            }, afternoonDelay);
+            
+            console.log(`已设置定时器: 上午播放将在 ${Math.floor(morningDelay / 3600000)} 小时 ${Math.floor((morningDelay % 3600000) / 60000)} 分钟后触发`);
+            console.log(`已设置定时器: 下午播放将在 ${Math.floor(afternoonDelay / 3600000)} 小时 ${Math.floor((afternoonDelay % 3600000) / 60000)} 分钟后触发`);
+            
+            return { morningDelay, afternoonDelay };
+        }
+        
+        // 启动定时播放
+        function startTimers() {
+            if (isRunning) return;
+            
+            // 先停止已有的定时器
+            stopTimers();
+            
+            // 设置新的定时器
+            const delays = setupTimers();
+            
+            // 更新UI状态
+            isRunning = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            status.textContent = '定时播放已启动';
+            
+            // 更新下一次播放时间显示
+            updateNextPlayTime();
+            
+            // 音频播放结束时更新状态
+            audio.onended = function() {
+                status.textContent = '播放结束，等待下次播放...';
+                updateNextPlayTime();
+            };
+        }
+        
+        // 停止定时播放
+        function stopTimers() {
+            if (!isRunning) return;
+            
+            // 清除定时器
+            if (morningTimer) clearTimeout(morningTimer);
+            if (afternoonTimer) clearTimeout(afternoonTimer);
+            
+            // 更新UI状态
+            isRunning = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            status.textContent = '定时播放已停止';
+            nextPlayTime.textContent = '';
+        }
+        
+        // 按钮事件监听
+        startButton.addEventListener('click', startTimers);
+        stopButton.addEventListener('click', stopTimers);
+        
+        // 页面加载时更新时间显示
+        updateNextPlayTime();
+    </script>
+</body>
+</html>
