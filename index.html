@@ -13,6 +13,7 @@
             --dark: #333333;
             --light: #f8f9fa;
             --warning: #ff9800;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         
         * {
@@ -31,13 +32,19 @@
             padding: 1rem;
         }
         
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
         .timer-card {
             background-color: white;
             border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--card-shadow);
             padding: 1.5rem;
-            max-width: 38rem;
-            width: 100%;
             transition: all 0.3s ease;
         }
         
@@ -246,6 +253,71 @@
             font-size: 0.8rem;
         }
         
+        .exercise-guide {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .guide-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .exercise-steps {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: var(--secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .step-number {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .step-image {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .step-description {
+            font-size: 0.9rem;
+            color: var(--dark);
+            line-height: 1.4;
+        }
+        
         @media (min-width: 640px) {
             .custom-time-input {
                 flex-direction: row;
@@ -271,87 +343,157 @@
                 gap: 1rem;
             }
         }
+        
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .timer-card {
+                flex: 1;
+                min-width: 500px;
+            }
+            
+            .exercise-guide {
+                flex: 1;
+                min-width: 400px;
+            }
+            
+            .exercise-steps {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="timer-card">
-        <div class="header">
-            <h1 class="title">
-                <i class="fa fa-eye mr-2 text-primary"></i>眼保健操定时播放
-            </h1>
-            <div class="current-time">
-                <i class="fa fa-clock-o mr-1 text-primary"></i>当前时间: <span id="currentTime" class="font-bold">--:--:--</span>
-            </div>
-        </div>
-        
-        <div class="audio-container">
-            <audio id="eyeExerciseAudio" controls>
-                <source src="eye_exercise.mp3" type="audio/mpeg">
-                您的浏览器不支持音频元素。
-            </audio>
-        </div>
-        
-        <div class="status-container">
-            <p id="status" class="status">正在初始化定时播放...</p>
-            <div class="countdown">
-                <p id="nextPlayTime"></p>
-                <p id="countdownTimer"></p>
-            </div>
-            <div class="volume-container">
-                <span id="webVolumeDisplay">网页音量: 100%</span>
-                <span id="systemVolumeDisplay">系统音量: 检测中...</span>
-                <span id="volumeWarning" class="volume-warning"></span>
-            </div>
-        </div>
-        
-        <div class="time-schedule">
-            <h3 class="section-title">
-                <i class="fa fa-calendar-check-o mr-2 text-primary"></i>播放时间表
-            </h3>
-            <div class="time-list">
-                <div class="time-item">
-                    <span class="time-label">默认时间:</span>
-                </div>
-                <div class="time-item">
-                    <span class="time-value">- 上午: 10:00</span>
-                </div>
-                <div class="time-item">
-                    <span class="time-value">- 下午: 15:00</span>
+    <div class="container">
+        <div class="timer-card">
+            <div class="header">
+                <h1 class="title">
+                    <i class="fa fa-eye mr-2 text-primary"></i>眼保健操定时播放
+                </h1>
+                <div class="current-time">
+                    <i class="fa fa-clock-o mr-1 text-primary"></i>当前时间: <span id="currentTime" class="font-bold">--:--:--</span>
                 </div>
             </div>
-            <div class="time-list">
-                <div class="time-item">
-                    <span class="time-label">自定义时间:</span>
+            
+            <div class="audio-container">
+                <audio id="eyeExerciseAudio" controls>
+                    <source src="eye_exercise.mp3" type="audio/mpeg">
+                    您的浏览器不支持音频元素。
+                </audio>
+            </div>
+            
+            <div class="status-container">
+                <p id="status" class="status">正在初始化定时播放...</p>
+                <div class="countdown">
+                    <p id="nextPlayTime"></p>
+                    <p id="countdownTimer"></p>
                 </div>
-                <div id="customTimes">
-                    <p id="noCustomTimes" class="time-item italic text-gray-500">暂无自定义时间</p>
+                <div class="volume-container">
+                    <span id="webVolumeDisplay">网页音量: 100%</span>
+                    <span id="systemVolumeDisplay">系统音量: 检测中...</span>
+                    <span id="volumeWarning" class="volume-warning"></span>
                 </div>
             </div>
-        </div>
-        
-        <div class="time-schedule bg-secondary">
-            <h3 class="section-title">
-                <i class="fa fa-plus-circle mr-2 text-primary"></i>添加自定义时间
-            </h3>
-            <div class="custom-time-input">
-                <input type="time" id="newCustomTime">
-                <button id="addCustomTimeBtn" class="btn btn-primary">
-                    <i class="fa fa-plus mr-1"></i>添加时间
+            
+            <div class="time-schedule">
+                <h3 class="section-title">
+                    <i class="fa fa-calendar-check-o mr-2 text-primary"></i>播放时间表
+                </h3>
+                <div class="time-list">
+                    <div class="time-item">
+                        <span class="time-label">默认时间:</span>
+                    </div>
+                    <div class="time-item">
+                        <span class="time-value">- 上午: 10:00</span>
+                    </div>
+                    <div class="time-item">
+                        <span class="time-value">- 下午: 15:00</span>
+                    </div>
+                </div>
+                <div class="time-list">
+                    <div class="time-item">
+                        <span class="time-label">自定义时间:</span>
+                    </div>
+                    <div id="customTimes">
+                        <p id="noCustomTimes" class="time-item italic text-gray-500">暂无自定义时间</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="time-schedule bg-secondary">
+                <h3 class="section-title">
+                    <i class="fa fa-plus-circle mr-2 text-primary"></i>添加自定义时间
+                </h3>
+                <div class="custom-time-input">
+                    <input type="time" id="newCustomTime">
+                    <button id="addCustomTimeBtn" class="btn btn-primary">
+                        <i class="fa fa-plus mr-1"></i>添加时间
+                    </button>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startButton" class="btn btn-primary">
+                    <i class="fa fa-play mr-1"></i>启动定时播放
+                </button>
+                <button id="stopButton" class="btn btn-secondary" disabled>
+                    <i class="fa fa-stop mr-1"></i>停止定时播放
                 </button>
             </div>
+            
+            <div class="footer">
+                <p>保护视力，预防近视 <i class="fa fa-heart text-accent"></i></p>
+            </div>
         </div>
         
-        <div class="controls">
-            <button id="startButton" class="btn btn-primary">
-                <i class="fa fa-play mr-1"></i>启动定时播放
-            </button>
-            <button id="stopButton" class="btn btn-secondary" disabled>
-                <i class="fa fa-stop mr-1"></i>停止定时播放
-            </button>
-        </div>
-        
-        <div class="footer">
-            <p>保护视力，预防近视 <i class="fa fa-heart text-accent"></i></p>
+        <div class="exercise-guide">
+            <h2 class="guide-title">眼保健操图解</h2>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1. 揉天应穴</div>
+                    <div class="step-title">按揉眉头下方凹陷处</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/cfa00106fbc583e43d2b27c9199c9e92.gif" alt="揉天应穴" class="step-image">
+                    <p class="step-description">以左右大拇指罗纹面按揉眉头下方的凹陷处（攒竹穴下三分），其他四指自然弯曲，支撑在前额上。手指不要滑动，按揉力度适中，以穴位产生轻微酸胀感为宜。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2. 挤按睛明穴</div>
+                    <div class="step-title">按揉鼻根部与内眼角之间</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/c3d4b7735b31f3c350fbcb632386bbf5.gif" alt="挤按睛明穴" class="step-image">
+                    <p class="step-description">用双手食指轻轻按压鼻根部，靠近内眼角的凹陷处（睛明穴）。先向下按，再向上挤，一按一挤为一次，动作要轻柔缓慢，避免压迫眼球。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3. 按揉四白穴</div>
+                    <div class="step-title">按揉眼眶下缘正中直下一横指处</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/a9c2676fe0a98f05bd044e0d20361db3.gif" alt="按揉四白穴" class="step-image">
+                    <p class="step-description">先以双手食指与中指并拢，放在鼻翼两侧，大拇指支撑在下腭骨凹陷处，然后放下中指，用食指指腹按揉面颊中央的四白穴。注意穴位不要移动，按揉时以局部有酸胀感为佳。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4. 按太阳穴轮刮眼眶</div>
+                    <div class="step-title">按揉太阳穴，轮刮眼眶</div>
+                    <img src="http://tukuimg.bdstatic.com/scrop/1e5ab82c1983036f2460281ef2af0d74.gif" alt="按太阳穴轮刮眼眶" class="step-image">
+                    <p class="step-description">双手握拳，以大拇指罗纹面按住太阳穴，用弯曲的食指第二节内侧面，从眉头开始沿眼眶上缘向外刮至眉梢，然后再从内眼角沿眼眶下缘向外刮至外眼角。先上后下，轮刮一圈为一次，注意力度适中，不要刮伤皮肤。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5. 按揉风池穴</div>
+                    <div class="step-title">按揉后颈部肌肉</div>
+                    <img src="https://file.youlai.cn/cnkfile1/M02/E6/A2/CAA748D52245CACADD44BD7E0A86E6A2.jpg" alt="按揉风池穴" class="step-image">
+                    <p class="step-description">用双手食指和中指并拢，按揉后颈部两侧凹陷处的风池穴（位于枕骨下方，胸锁乳突肌与斜方肌上端之间的凹陷处）。同时头部微微后仰，保持肌肉放松，按揉时以局部有酸胀感为宜。</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">6. 揉捏耳垂，脚趾抓地</div>
+                    <div class="step-title">放松全身肌肉</div>
+                    <img src="https://p3.itc.cn/images01/20230111/d3b781d35aa54925b9bc68b13ac7a5ad.png" alt="揉捏耳垂，脚趾抓地" class="step-image">
+                    <p class="step-description">双手拇指和食指捏住耳垂，轻轻揉捏，同时双脚脚趾抓地，全身肌肉微微收缩后放松。重复此动作，可促进耳部血液循环，缓解眼疲劳，同时放松全身肌肉。</p>
+                </div>
+            </div>
         </div>
     </div>
 
