@@ -10,8 +10,17 @@
 简洁版 ：https://eye.aq520.com
 
 -----------------------
+默认版本 截图
 
 <img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/1.png" alt="Mobile wallpaper"   />
+
+-----------------------
+
+简洁版 截图
+
+<img src="https://raw.githubusercontent.com/mickeywaley/Regular_eye_exercises/refs/heads/main/%E7%AE%80%E6%B4%81%E7%89%88%E7%9C%BC%E4%BF%9D%E5%81%A5%E6%93%8D/1.png" alt="Mobile wallpaper"   />
+
+-----------------------
 
 
 眼保健操定时播放-
