@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼保健操定时播放系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" as="style">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        warning: '#FFAA33',
+                        danger: '#FF4D4F',
+                        dark: '#1F2937',
+                        light: '#F9FAFB'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass {
+                backdrop-filter: blur(12px);
+                background-color: rgba(255, 255, 255, 0.7);
+            }
+            .animate-pulse-slow {
+                animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-inter transition-colors duration-500">
+    <!-- 骨架屏 -->
+    <div id="skeleton-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div class="text-center">
+            <div class="inline-block animate-pulse">
+                <div class="w-24 h-24 rounded-full bg-gray-200 mb-4"></div>
+                <div class="w-48 h-8 rounded bg-gray-200 mx-auto mb-2"></div>
+                <div class="w-36 h-6 rounded bg-gray-200 mx-auto"></div>
+            </div>
+            <div class="mt-8 text-gray-500">
+                <div class="animate-pulse">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 头部区域 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2 tracking-tight">
+                <i class="fa fa-eye mr-3 animate-float"></i>眼保健操定时播放系统
+            </h1>
+            <p class="text-gray-600 text-lg">保护眼睛，预防近视，从规律眼保健操开始</p>
+        </header>
+
+        <!-- 主内容卡片 -->
+        <div class="glass rounded-2xl shadow-xl p-6 md:p-8 mb-8 transition-all duration-500 hover:shadow-2xl">
+            <!-- 当前时间显示 -->
+            <div class="mb-8 text-center">
+                <div class="text-[clamp(1.5rem,3vw,2rem)] font-semibold text-dark">
+                    <span id="current-time" class="text-primary">--:--:--</span>
+                </div>
+                <p class="text-gray-500 mt-2" id="current-date">2025年5月28日 星期三</p>
+            </div>
+
+            <!-- 定时信息 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-clock-o mr-2 text-primary"></i>播放计划
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white/80 rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg">
+                        <h3 class="font-semibold text-dark mb-2 flex items-center">
+                            <i class="fa fa-sun-o mr-2 text-warning"></i>上午播放
+                        </h3>
+                        <p class="text-lg font-medium text-primary">
+                            <span id="morning-time">10:00:00</span>
+                        </p>
+                        <div class="mt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">状态:</span>
+                                <span id="morning-status" class="text-sm font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    已设置
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg">
+                        <h3 class="font-semibold text-dark mb-2 flex items-center">
+                            <i class="fa fa-moon-o mr-2 text-primary"></i>下午播放
+                        </h3>
+                        <p class="text-lg font-medium text-primary">
+                            <span id="afternoon-time">15:00:00</span>
+                        </p>
+                        <div class="mt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">状态:</span>
+                                <span id="afternoon-status" class="text-sm font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    已设置
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下次播放时间 -->
+                <div class="mt-6 bg-blue-50 rounded-lg p-4 border-l-4 border-primary">
+                    <h3 class="font-semibold text-dark mb-1 flex items-center">
+                        <i class="fa fa-calendar-check-o mr-2 text-primary"></i>下次播放时间
+                    </h3>
+                    <p class="text-lg font-medium text-primary" id="next-play-time">
+                        今天 10:00:00
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1" id="time-until-next">
+                        剩余: <span class="font-semibold">-- 小时 -- 分钟 -- 秒</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 音量控制区域 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-volume-up mr-2 text-primary"></i>音量控制
+                </h2>
+                <div class="bg-white/80 rounded-xl p-6 shadow-md">
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="volume" class="font-medium text-dark">网页音量</label>
+                        <span id="volume-value" class="text-primary font-medium">80%</span>
+                    </div>
+                    <div class="relative">
+                        <input type="range" id="volume" min="0" max="100" value="80" 
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <div class="absolute -top-10 left-0 right-0 flex justify-between text-xs text-gray-500">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 音频控制区域 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-music mr-2 text-primary"></i>音频控制
+                </h2>
+                <div class="bg-white/80 rounded-xl p-6 shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-dark">眼保健操</h3>
+                        <span id="audio-status" class="text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-800">
+                            就绪
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-center space-x-6 mb-6">
+                        <button id="play-btn" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 active:scale-95">
+                            <i class="fa fa-play text-xl"></i>
+                        </button>
+                        <button id="pause-btn" class="w-14 h-14 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center shadow-lg hover:bg-gray-300 transition-all duration-300 transform hover:scale-105 active:scale-95">
+                            <i class="fa fa-pause text-xl"></i>
+                        </button>
+                        <button id="stop-btn" class="w-14 h-14 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center shadow-lg hover:bg-gray-300 transition-all duration-300 transform hover:scale-105 active:scale-95">
+                            <i class="fa fa-stop text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="relative">
+                        <div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-primary transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span id="current-time-audio">00:00</span>
+                            <span id="total-time-audio">00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设置区域 -->
+            <div>
+                <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                    <i class="fa fa-cog mr-2 text-primary"></i>系统设置
+                </h2>
+                <div class="bg-white/80 rounded-xl p-6 shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <label class="font-medium text-dark">上午播放时间</label>
+                                <input type="time" id="morning-time-input" value="10:00" 
+                                    class="bg-gray-100 rounded-md px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="font-medium text-dark">下午播放时间</label>
+                                <input type="time" id="afternoon-time-input" value="15:00" 
+                                    class="bg-gray-100 rounded-md px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <label class="font-medium text-dark">自动播放</label>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="auto-play-toggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="save-settings" class="mt-6 w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        <i class="fa fa-save mr-2"></i>保存设置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="text-center text-gray-500 text-sm py-4">
+            <p>眼保健操定时播放系统 &copy; 2025 | 保护视力，预防近视</p>
+        </footer>
+    </div>
+
+    <!-- 音频元素 -->
+    <audio id="eye-exercise-audio" preload="none" src="eye_exercise.mp3"></audio>
+
+    <!-- 通知元素 -->
+    <div id="notification" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-xl p-4 transform translate-y-20 opacity-0 transition-all duration-500 z-50 max-w-xs">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fa fa-bell text-primary text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-dark" id="notification-title">眼保健操时间</h3>
+                <div class="mt-1 text-sm text-gray-600" id="notification-message">
+                    现在是上午10点，该做眼保健操啦！
+                </div>
+                <div class="mt-2">
+                    <button id="close-notification" class="text-xs text-primary hover:text-primary/80">
+                        知道了
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 骨架屏控制
+        function hideSkeletonScreen() {
+            const skeletonScreen = document.getElementById('skeleton-screen');
+            skeletonScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                skeletonScreen.classList.add('hidden');
+            }, 300);
+        }
+
+        // DOM元素
+        const currentTimeEl = document.getElementById('current-time');
+        const currentDateEl = document.getElementById('current-date');
+        const morningTimeEl = document.getElementById('morning-time');
+        const afternoonTimeEl = document.getElementById('afternoon-time');
+        const nextPlayTimeEl = document.getElementById('next-play-time');
+        const timeUntilNextEl = document.getElementById('time-until-next');
+        const volumeEl = document.getElementById('volume');
+        const volumeValueEl = document.getElementById('volume-value');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const progressBarEl = document.getElementById('progress-bar');
+        const currentTimeAudioEl = document.getElementById('current-time-audio');
+        const totalTimeAudioEl = document.getElementById('total-time-audio');
+        const audioStatusEl = document.getElementById('audio-status');
+        const morningTimeInput = document.getElementById('morning-time-input');
+        const afternoonTimeInput = document.getElementById('afternoon-time-input');
+        const autoPlayToggle = document.getElementById('auto-play-toggle');
+        const saveSettingsBtn = document.getElementById('save-settings');
+        const eyeExerciseAudio = document.getElementById('eye-exercise-audio');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notification-title');
+        const notificationMessage = document.getElementById('notification-message');
+        const closeNotificationBtn = document.getElementById('close-notification');
+
+        // 全局变量
+        let morningTime = '10:00:00';
+        let afternoonTime = '15:00:00';
+        let autoPlayEnabled = true;
+        let nextPlayTime = null;
+        let timerInterval = null;
+        let audioPreloaded = false;
+
+        // 延时预加载音频
+        function delayedAudioPreload(delay = 3000) {
+            setTimeout(() => {
+                const startTime = performance.now();
+                
+                // 设置音频预加载
+                eyeExerciseAudio.preload = 'auto';
+                
+                // 开始加载音频
+                eyeExerciseAudio.load();
+                
+                // 监听音频加载事件
+                eyeExerciseAudio.addEventListener('loadedmetadata', () => {
+                    const loadTime = Math.round(performance.now() - startTime);
+                    console.log(`音频元数据加载完成，耗时: ${loadTime}ms`);
+                    audioPreloaded = true;
+                });
+                
+                eyeExerciseAudio.addEventListener('canplaythrough', () => {
+                    const loadTime = Math.round(performance.now() - startTime);
+                    console.log(`音频可以流畅播放，耗时: ${loadTime}ms`);
+                });
+                
+                eyeExerciseAudio.addEventListener('error', (error) => {
+                    console.error('音频加载错误:', error);
+                });
+                
+                console.log(`开始延时(${delay/1000}秒)预加载音频`);
+            }, delay);
+        }
+
+        // 初始化
+        function init() {
+            // 加载保存的设置
+            loadSettings();
+            
+            // 更新时间显示
+            updateDateTime();
+            
+            // 计算下次播放时间
+            calculateNextPlayTime();
+            
+            // 设置音频
+            setupAudio();
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 启动定时器
+            startTimer();
+            
+            // 隐藏骨架屏
+            hideSkeletonScreen();
+            
+            // 延时预加载音频
+            delayedAudioPreload(3000);
+        }
+
+        // 加载保存的设置
+        function loadSettings() {
+            const savedMorningTime = localStorage.getItem('morningTime');
+            const savedAfternoonTime = localStorage.getItem('afternoonTime');
+            const savedAutoPlay = localStorage.getItem('autoPlayEnabled');
+
+            if (savedMorningTime) {
+                morningTime = savedMorningTime + ':00';
+                morningTimeInput.value = savedMorningTime;
+                morningTimeEl.textContent = morningTime;
+            }
+            
+            if (savedAfternoonTime) {
+                afternoonTime = savedAfternoonTime + ':00';
+                afternoonTimeInput.value = savedAfternoonTime;
+                afternoonTimeEl.textContent = afternoonTime;
+            }
+            
+            if (savedAutoPlay !== null) {
+                autoPlayEnabled = savedAutoPlay === 'true';
+                autoPlayToggle.checked = autoPlayEnabled;
+            }
+        }
+
+        // 更新日期和时间显示
+        function updateDateTime() {
+            const now = new Date();
+            
+            // 更新当前时间
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            currentTimeEl.textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // 更新当前日期
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[now.getDay()];
+            currentDateEl.textContent = `${year}年${month}月${day}日 星期${weekday}`;
+            
+            // 检查是否到了播放时间
+            const currentTimeStr = `${hours}:${minutes}:${seconds}`;
+            if (autoPlayEnabled && (currentTimeStr === morningTime || currentTimeStr === afternoonTime)) {
+                playAudio();
+                showNotification();
+            }
+            
+            // 更新剩余时间
+            updateTimeUntilNext();
+        }
+
+        // 计算下次播放时间
+        function calculateNextPlayTime() {
+            const now = new Date();
+            const todayMorning = new Date(now);
+            const todayAfternoon = new Date(now);
+            
+            const [morningHours, morningMinutes] = morningTime.split(':').map(Number);
+            const [afternoonHours, afternoonMinutes] = afternoonTime.split(':').map(Number);
+            
+            todayMorning.setHours(morningHours, morningMinutes, 0);
+            todayAfternoon.setHours(afternoonHours, afternoonMinutes, 0);
+            
+            if (now < todayMorning) {
+                nextPlayTime = todayMorning;
+                nextPlayTimeEl.textContent = `今天 ${morningTime.substring(0, 5)}:00`;
+            } else if (now < todayAfternoon) {
+                nextPlayTime = todayAfternoon;
+                nextPlayTimeEl.textContent = `今天 ${afternoonTime.substring(0, 5)}:00`;
+            } else {
+                // 今天的播放时间已过，设置为明天的上午播放时间
+                nextPlayTime = new Date(now);
+                nextPlayTime.setDate(nextPlayTime.getDate() + 1);
+                nextPlayTime.setHours(morningHours, morningMinutes, 0);
+                nextPlayTimeEl.textContent = `明天 ${morningTime.substring(0, 5)}:00`;
+            }
+            
+            updateTimeUntilNext();
+        }
+
+        // 更新到下次播放的剩余时间
+        function updateTimeUntilNext() {
+            if (!nextPlayTime) return;
+            
+            const now = new Date();
+            const diff = nextPlayTime - now;
+            
+            if (diff <= 0) {
+                calculateNextPlayTime();
+                return;
+            }
+            
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            timeUntilNextEl.innerHTML = `剩余: <span class="font-semibold">${hours} 小时 ${minutes} 分钟 ${seconds} 秒</span>`;
+        }
+
+        // 设置音频
+        function setupAudio() {
+            eyeExerciseAudio.volume = volumeEl.value / 100;
+            
+            // 音频元数据加载完成后更新总时长
+            eyeExerciseAudio.addEventListener('loadedmetadata', () => {
+                updateAudioTimeDisplay();
+            });
+            
+            // 音频播放时间更新时更新进度条
+            eyeExerciseAudio.addEventListener('timeupdate', () => {
+                updateAudioProgress();
+            });
+            
+            // 音频播放结束时重置
+            eyeExerciseAudio.addEventListener('ended', () => {
+                resetAudio();
+            });
+        }
+
+        // 更新音频时间显示
+        function updateAudioTimeDisplay() {
+            const duration = eyeExerciseAudio.duration;
+            if (isNaN(duration)) return;
+            
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            totalTimeAudioEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 更新音频进度
+        function updateAudioProgress() {
+            const duration = eyeExerciseAudio.duration;
+            const currentTime = eyeExerciseAudio.currentTime;
+            
+            if (isNaN(duration) || isNaN(currentTime)) return;
+            
+            const progress = (currentTime / duration) * 100;
+            progressBarEl.style.width = `${progress}%`;
+            
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = Math.floor(currentTime % 60);
+            currentTimeAudioEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 播放音频
+        function playAudio() {
+            // 如果音频尚未预加载，则立即开始加载
+            if (!audioPreloaded) {
+                eyeExerciseAudio.preload = 'auto';
+                eyeExerciseAudio.load();
+                audioPreloaded = true;
+            }
+            
+            eyeExerciseAudio.play()
+                .then(() => {
+                    playBtn.classList.remove('bg-primary');
+                    playBtn.classList.add('bg-gray-200');
+                    playBtn.querySelector('i').classList.remove('fa-play');
+                    playBtn.querySelector('i').classList.add('fa-play-circle');
+                    
+                    pauseBtn.classList.remove('bg-gray-200');
+                    pauseBtn.classList.add('bg-primary');
+                    pauseBtn.querySelector('i').classList.remove('fa-pause');
+                    pauseBtn.querySelector('i').classList.add('fa-pause-circle');
+                    
+                    audioStatusEl.textContent = '播放中';
+                    audioStatusEl.className = 'text-sm font-medium px-2 py-1 rounded-full bg-green-100 text-green-800';
+                })
+                .catch(error => {
+                    console.error('播放失败:', error);
+                    audioStatusEl.textContent = '播放失败';
+                    audioStatusEl.className = 'text-sm font-medium px-2 py-1 rounded-full bg-red-100 text-red-800';
+                });
+        }
+
+        // 暂停音频
+        function pauseAudio() {
+            eyeExerciseAudio.pause();
+            
+            playBtn.classList.remove('bg-gray-200');
+            playBtn.classList.add('bg-primary');
+            playBtn.querySelector('i').classList.remove('fa-play-circle');
+            playBtn.querySelector('i').classList.add('fa-play');
+            
+            pauseBtn.classList.remove('bg-primary');
+            pauseBtn.classList.add('bg-gray-200');
+            pauseBtn.querySelector('i').classList.remove('fa-pause-circle');
+            pauseBtn.querySelector('i').classList.add('fa-pause');
+            
+            audioStatusEl.textContent = '已暂停';
+            audioStatusEl.className = 'text-sm font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800';
+        }
+
+        // 停止音频
+        function stopAudio() {
+            eyeExerciseAudio.pause();
+            eyeExerciseAudio.currentTime = 0;
+            updateAudioProgress();
+            
+            playBtn.classList.remove('bg-gray-200');
+            playBtn.classList.add('bg-primary');
+            playBtn.querySelector('i').classList.remove('fa-play-circle');
+            playBtn.querySelector('i').classList.add('fa-play');
+            
+            pauseBtn.classList.remove('bg-primary');
+            pauseBtn.classList.add('bg-gray-200');
+            pauseBtn.querySelector('i').classList.remove('fa-pause-circle');
+            pauseBtn.querySelector('i').classList.add('fa-pause');
+            
+            audioStatusEl.textContent = '就绪';
+            audioStatusEl.className = 'text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-800';
+        }
+
+        // 重置音频
+        function resetAudio() {
+            eyeExerciseAudio.currentTime = 0;
+            updateAudioProgress();
+            
+            playBtn.classList.remove('bg-gray-200');
+            playBtn.classList.add('bg-primary');
+            playBtn.querySelector('i').classList.remove('fa-play-circle');
+            playBtn.querySelector('i').classList.add('fa-play');
+            
+            pauseBtn.classList.remove('bg-primary');
+            pauseBtn.classList.add('bg-gray-200');
+            pauseBtn.querySelector('i').classList.remove('fa-pause-circle');
+            pauseBtn.querySelector('i').classList.add('fa-pause');
+            
+            audioStatusEl.textContent = '就绪';
+            audioStatusEl.className = 'text-sm font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-800';
+        }
+
+        // 显示通知
+        function showNotification() {
+            const now = new Date();
+            const hours = now.getHours();
+            
+            if (hours >= parseInt(morningTime.split(':')[0]) - 1 && hours <= parseInt(morningTime.split(':')[0]) + 1) {
+                notificationTitle.textContent = '上午眼保健操时间';
+                notificationMessage.textContent = '现在是上午眼保健操时间，让我们一起保护眼睛！';
+            } else {
+                notificationTitle.textContent = '下午眼保健操时间';
+                notificationMessage.textContent = '现在是下午眼保健操时间，放松一下眼睛吧！';
+            }
+            
+            notification.classList.remove('translate-y-20', 'opacity-0');
+            notification.classList.add('translate-y-0', 'opacity-100');
+            
+            // 5秒后自动关闭通知
+            setTimeout(() => {
+                hideNotification();
+            }, 5000);
+        }
+
+        // 隐藏通知
+        function hideNotification() {
+            notification.classList.remove('translate-y-0', 'opacity-100');
+            notification.classList.add('translate-y-20', 'opacity-0');
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 音量控制
+            volumeEl.addEventListener('input', () => {
+                const volume = parseInt(volumeEl.value);
+                volumeValueEl.textContent = `${volume}%`;
+                eyeExerciseAudio.volume = volume / 100;
+            });
+            
+            // 音频控制按钮
+            playBtn.addEventListener('click', playAudio);
+            pauseBtn.addEventListener('click', pauseAudio);
+            stopBtn.addEventListener('click', stopAudio);
+            
+            // 通知关闭按钮
+            closeNotificationBtn.addEventListener('click', hideNotification);
+            
+            // 设置保存按钮
+            saveSettingsBtn.addEventListener('click', () => {
+                morningTime = morningTimeInput.value + ':00';
+                afternoonTime = afternoonTimeInput.value + ':00';
+                autoPlayEnabled = autoPlayToggle.checked;
+                
+                morningTimeEl.textContent = morningTime;
+                afternoonTimeEl.textContent = afternoonTime;
+                
+                // 保存到localStorage
+                localStorage.setItem('morningTime', morningTimeInput.value);
+                localStorage.setItem('afternoonTime', afternoonTimeInput.value);
+                localStorage.setItem('autoPlayEnabled', autoPlayEnabled);
+                
+                // 重新计算下次播放时间
+                calculateNextPlayTime();
+                
+                // 显示保存成功的通知
+                notificationTitle.textContent = '设置已保存';
+                notificationMessage.textContent = '眼保健操时间设置已成功保存！';
+                showNotification();
+            });
+        }
+
+        // 启动定时器
+        function startTimer() {
+            // 立即更新一次
+            updateDateTime();
+            
+            // 每秒更新一次
+            timerInterval = setInterval(updateDateTime, 1000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+    
