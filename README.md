@@ -4,7 +4,10 @@
 
 -----------------------
 
-演示地址：https://dh.aq520.com/mp3/index.html 
+演示地址（默认版本）：https://dh.aq520.com/mp3/index.html 
+
+
+简洁版 ：https://eye.aq520.com
 
 -----------------------
 
